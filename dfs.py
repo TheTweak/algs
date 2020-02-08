@@ -1,9 +1,10 @@
 from appJar import gui
+import random
 
-def generategrid(w=16, h=16):
+def generategrid(w=5, h=5):
     rows = []
     for x in range(w):
-        row = [0 for _ in range(h)]
+        row = [0 if random.random() > 0.2 else 1 for _ in range(h)]
         rows.append(row)            
     return rows
 
