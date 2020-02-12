@@ -1,8 +1,5 @@
 from adjacent import Adjacent
-from grid import (
-        generategrid,
-        showgrid
-    )
+from grid import Grid
 
 class Dfs:
 
@@ -29,11 +26,7 @@ class Dfs:
         return self.visited[d]
 
 if __name__ == "__main__":
-    grid = generategrid()
-    adj = Adjacent(grid)
-    for r, row in enumerate(grid):
-        for c, col in enumerate(row):
-            print("Adjacent Vs for (%s, %s): %s" % (r, c, adj.get(r, c)))
-    dfs = Dfs(grid)
-    print("Bottom right corner is reachable: %s" % dfs.connected(len(grid)*len(grid[0])-1))
-    showgrid(grid)
+    grid = Grid()
+    dfs = Dfs(grid.data)
+    print("Bottom right corner is reachable: %s" % dfs.connected(len(grid.data)*len(grid.data[0])-1))
+    grid.show()
