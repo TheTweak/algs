@@ -1,12 +1,15 @@
 from adjacent import Adjacent
 import copy
 from grid import Grid
+from dfs import Dfs
+import argparse
 
 class Bfs:
 
-    def __init__(self, grid, s=0):
+    def __init__(self, grid, s=0, adjacent=None):
         self.s = s
-        adj = Adjacent(grid)
+        if adjacent is None:
+            adjacent = Adjacent(grid)
         self.visited = [0 for _ in range(len(grid)*len(grid[0]))]
         self.edge_to = [-1 for _ in range(len(grid)*len(grid[0]))]
         queue = []
@@ -14,7 +17,7 @@ class Bfs:
         while len(queue) != 0:
             v = queue.pop(0)
             self.visited[v] = True
-            for a in adj.get(v):
+            for a in adjacent.get(v):
                 if not self.visited[a]:
                     self.edge_to[a] = v
                     queue.append(a)
@@ -32,8 +35,21 @@ class Bfs:
         return path
 
 if __name__ == "__main__":
-    grid = Grid()
-    adj = Adjacent(grid.data)
-    bfs = Bfs(grid.data)
-    print("Shortest path to bottom right: %s" % bfs.shortest_path(len(grid.data)*len(grid.data[0])-1))
+    import time
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-width", default=16, help="Grid width")
+    parser.add_argument("-height", default=16, help="Grid height")
+    args = parser.parse_args()
+    grid = Grid(w=args.width, h=args.height)
+    adjacent = Adjacent(grid.data)
+    dfs = Dfs(grid.data, adjacent=adjacent)
+    bottom_right = len(grid.data)*len(grid.data[0])-1
+    if not dfs.connected(bottom_right):
+        print("Bottom right corner is not reachable")
+        exit(1)
+    bfs = Bfs(grid.data, adjacent=adjacent)
+    print("Calculating shortest path..")
+    shortest_path = bfs.shortest_path(bottom_right)
+    for v in shortest_path:
+        grid.set_cell_color(v=v, color="Gray")
     grid.show()

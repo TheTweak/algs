@@ -3,8 +3,10 @@ from grid import Grid
 
 class Dfs:
 
-    def __init__(self, grid, s=0):
-        self.adj = Adjacent(grid)
+    def __init__(self, grid, s=0, adjacent=None):
+        self.adj = adjacent
+        if adjacent is None:
+            self.adj = Adjacent(grid)
         self.visited = [0 for _ in range(len(grid)*len(grid[0]))]
         self.edge_to = [0 for _ in range(len(grid)*len(grid[0]))]
         stack = []

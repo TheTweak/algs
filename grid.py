@@ -4,6 +4,8 @@ import random
 class Grid:
 
     def __init__(self, w=5, h=5):
+        self.h = h
+        self.w = w
         self.app=gui("Grid Demo", "300x300")
         
         self.app.setSticky("news")
@@ -26,6 +28,15 @@ class Grid:
         rows[0][0] = 0
         rows[len(rows)-1][len(rows)-1] = 0
         return rows
+
+    '''
+    Change color of cell V (sequential number)
+    '''
+    def set_cell_color(self, *, v, color):
+        x = int(v / self.w)
+        y = v - x * self.w
+        print("cell# %s is (%s, %s)" % (v, x, y))
+        self.app.setLabelBg("l-%s-%s" % (x, y), color)
 
     def show(self):
         self.app.go()
