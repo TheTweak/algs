@@ -16,11 +16,12 @@ class Bfs:
         queue.append(s)
         while len(queue) != 0:
             v = queue.pop(0)
+            if not self.visited[v]:
+                for a in adjacent.get(v):
+                    if not self.visited[a]:
+                        self.edge_to[a] = v
+                        queue.append(a)
             self.visited[v] = True
-            for a in adjacent.get(v):
-                if not self.visited[a]:
-                    self.edge_to[a] = v
-                    queue.append(a)
 
     def shortest_path(self, d):
         path = [d]
@@ -41,7 +42,7 @@ if __name__ == "__main__":
     parser.add_argument("-height", default=16, help="Grid height")
     args = parser.parse_args()
     s = time.time()
-    grid = Grid(w=args.width, h=args.height)
+    grid = Grid(w=int(args.width), h=int(args.height))
     print("Grid creation: %s s" % (time.time() - s))
     s = time.time()
     adjacent = Adjacent(grid.data)
