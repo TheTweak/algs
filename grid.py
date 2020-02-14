@@ -1,23 +1,21 @@
-from appJar import gui
+from matplotlib import pyplot as plt
+import numpy as np
 import random
+import time
 
 class Grid:
 
     def __init__(self, w=5, h=5):
         self.h = h
         self.w = w
-        self.app=gui("Grid Demo", "300x300")
-        
-        self.app.setSticky("news")
-        self.app.setExpand("both")
-        self.app.setFont(20)
+        s = time.time()
         self.data = self.generategrid(w=w, h=h)
+        self.grid = np.zeros((h, w, 3), dtype=np.uint8)
+        print("Grid data generated in %s" % (time.time() - s))
         for x, r in enumerate(self.data):
             for y, c in enumerate(r):
-                l = "l-%s-%s" % (x, y)
-                lb = self.app.addLabel(l, "", x, y)
-                self.app.setLabelBg(l, "Green" if c == 0 else "Black")
-                self.app.setLabelRelief(l, "sunken")
+                if c == 0:
+                    self.grid[x, y] = [0, 255, 0]
 
     def generategrid(self, w=5, h=5):
         rows = []
@@ -35,9 +33,9 @@ class Grid:
     def set_cell_color(self, *, v, color):
         x = int(v / self.w)
         y = v - x * self.w
-        print("cell# %s is (%s, %s)" % (v, x, y))
-        self.app.setLabelBg("l-%s-%s" % (x, y), color)
+        self.grid[x, y] = color
 
     def show(self):
-        self.app.go()
+        plt.imshow(self.grid)
+        plt.show()
 
