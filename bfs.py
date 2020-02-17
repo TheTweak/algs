@@ -38,11 +38,10 @@ class Bfs:
 if __name__ == "__main__":
     import time
     parser = argparse.ArgumentParser()
-    parser.add_argument("-width", default=16, help="Grid width")
-    parser.add_argument("-height", default=16, help="Grid height")
+    parser.add_argument("-size", default=16, help="Grid size")
     args = parser.parse_args()
     s = time.time()
-    grid = Grid(w=int(args.width), h=int(args.height))
+    grid = Grid(w=int(args.size), h=int(args.size))
     print("Grid creation: %s s" % (time.time() - s))
     s = time.time()
     adjacent = Adjacent(grid.data)
@@ -59,5 +58,5 @@ if __name__ == "__main__":
     shortest_path = bfs.shortest_path(bottom_right)
     print("Shortest path: %s s" % (time.time() - s))
     for v in shortest_path:
-        grid.set_cell_color(v=v, color=[127, 127, 127])
+        grid.set_cell_color(v=v, color=[255, 255, 0])
     grid.show()
