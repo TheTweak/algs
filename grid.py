@@ -19,9 +19,26 @@ class Grid:
 
     def generategrid(self, w=5, h=5):
         rows = []
-        for x in range(w):
-            row = [0 if random.random() > 0.2 else 1 for _ in range(h)]
+        for x in range(h):
+            row = [0 for _ in range(w)]
             rows.append(row)            
+        block_size = int(w/5)
+        block_directions = [0, 1, 2, 3] # do nothing, down, left, right
+        for bx in range(0, h, block_size):
+            for by in range(0, w, block_size): 
+                block_length = random.randint(0, block_size)
+                blocks = []
+                for _ in range(block_length):
+                    blocks.append(random.choice(block_directions))
+                for bi, b in enumerate(blocks):
+                    if b == 0:
+                        pass
+                    elif b == 1:
+                        rows[min(h-1, bx+bi+1)][by] = 1
+                    elif b == 2:
+                        rows[bx][max(0, by-(bi+1))] = 1
+                    elif b == 3:
+                        rows[bx][min(by+bi+1, w-1)] = 1
         # top left and bottom right is always 0
         rows[0][0] = 0
         rows[len(rows)-1][len(rows)-1] = 0
