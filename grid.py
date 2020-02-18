@@ -36,7 +36,7 @@ class Grid:
                     elif b == 1:
                         rows[min(h-1, bx+bi+1)][by] = 1
                     elif b == 2:
-                        rows[bx][max(0, by-(bi+1))] = 1
+                        rows[bx][min(w-1, max(0, by+bi-1))] = 1
                     elif b == 3:
                         rows[bx][min(by+bi+1, w-1)] = 1
         # top left and bottom right is always 0
