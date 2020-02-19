@@ -8,10 +8,6 @@ class Adjacent:
         for r, row in enumerate(grid):
             for c, col in enumerate(row):
                 adjacent = []
-                self.check_add_adj(r-1, c-1, adjacent) # upper left
-                self.check_add_adj(r-1, c+1, adjacent) # upper right
-                self.check_add_adj(r+1, c+1, adjacent) # down right
-                self.check_add_adj(r+1, c-1, adjacent) # down left
                 self.check_add_adj(r, c-1, adjacent)   # left
                 self.check_add_adj(r, c+1, adjacent)   # right
                 self.check_add_adj(r-1, c, adjacent)   # up
