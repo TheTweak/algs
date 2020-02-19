@@ -1,5 +1,6 @@
 from adjacent import Adjacent
 from grid import Grid
+import argparse
 
 class Dfs:
 
@@ -28,7 +29,10 @@ class Dfs:
         return self.visited[d]
 
 if __name__ == "__main__":
-    grid = Grid()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-size", default=16, help="Grid size")
+    args = parser.parse_args()
+    grid = Grid(w=int(args.size), h=int(args.size))
     dfs = Dfs(grid.data)
     print("Bottom right corner is reachable: %s" % dfs.connected(len(grid.data)*len(grid.data[0])-1))
     grid.show()

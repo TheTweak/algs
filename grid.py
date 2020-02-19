@@ -2,6 +2,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 import random
 import time
+import itertools
 
 class Grid:
 
@@ -18,31 +19,36 @@ class Grid:
                     self.grid[x, y] = [0, 255, 0]
 
     def generategrid(self, w=5, h=5):
-        rows = []
-        for x in range(h):
-            row = [0 for _ in range(w)]
-            rows.append(row)            
-        block_size = int(w/5)
-        block_directions = [0, 1, 2, 3] # do nothing, down, left, right
-        for bx in range(0, h, block_size):
-            for by in range(0, w, block_size): 
-                block_length = random.randint(0, block_size)
-                blocks = []
-                for _ in range(block_length):
-                    blocks.append(random.choice(block_directions))
-                for bi, b in enumerate(blocks):
-                    if b == 0:
-                        pass
-                    elif b == 1:
-                        rows[min(h-1, bx+bi+1)][by] = 1
-                    elif b == 2:
-                        rows[bx][min(w-1, max(0, by+bi-1))] = 1
-                    elif b == 3:
-                        rows[bx][min(by+bi+1, w-1)] = 1
+        rows = [[0]*w for _ in range(h)]
+        block_size = int(w/8)
+        for x in range(0, w, block_size):
+            for y in range(0, h, block_size):
+                block = self.generateblock(block_size)
+                for bx, brow in enumerate(block):
+                    for by, b in enumerate(brow):
+                        if x+bx >= w or y+by >= h:
+                            continue
+                        rows[x+bx][y+by] = b
         # top left and bottom right is always 0
         rows[0][0] = 0
         rows[len(rows)-1][len(rows)-1] = 0
         return rows
+
+    def generateblock(self, size):
+        x = random.randint(0, size) # starting point
+        y = random.randint(0, size)
+        directions = list(itertools.product([0, 1, -1], [0, 1, -1]))
+        block = [[0]*size for _ in range(size)]
+        for _ in range(size):
+            dx, dy = random.choice(directions)
+            x += dx
+            y += dy
+            x = max(0, x)
+            x = min(x, size-1)
+            y = max(0, y)
+            y = min(y, size-1)
+            block[x][y] = 1
+        return block
 
     '''
     Change color of cell V (sequential number)
@@ -56,3 +62,7 @@ class Grid:
         plt.imshow(self.grid)
         plt.show()
 
+
+if __name__ == "__main__":
+    g = Grid(w=32, h=32)
+    g.show()
