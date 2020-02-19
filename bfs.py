@@ -38,10 +38,11 @@ class Bfs:
 if __name__ == "__main__":
     import time
     parser = argparse.ArgumentParser()
-    parser.add_argument("-size", default=16, help="Grid size")
+    parser.add_argument("-size", default=16, help="Grid size", type=int)
+    parser.add_argument("-bs", default=3, help="Grid obstacle block size", type=int)
     args = parser.parse_args()
     s = time.time()
-    grid = Grid(w=int(args.size), h=int(args.size))
+    grid = Grid(w=args.size, h=args.size, block_size=args.bs)
     print("Grid creation: %s s" % (time.time() - s))
     s = time.time()
     adjacent = Adjacent(grid.data)

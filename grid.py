@@ -6,9 +6,10 @@ import itertools
 
 class Grid:
 
-    def __init__(self, w=5, h=5):
+    def __init__(self, w=5, h=5, block_size=3):
         self.h = h
         self.w = w
+        self.block_size = block_size
         s = time.time()
         self.data = self.generategrid(w=w, h=h)
         self.grid = np.zeros((h, w, 3), dtype=np.uint8)
@@ -20,10 +21,9 @@ class Grid:
 
     def generategrid(self, w=5, h=5):
         rows = [[0]*w for _ in range(h)]
-        block_size = int(w/8)
-        for x in range(0, w, block_size):
-            for y in range(0, h, block_size):
-                block = self.generateblock(block_size)
+        for x in range(0, w, self.block_size):
+            for y in range(0, h, self.block_size):
+                block = self.generateblock(self.block_size)
                 for bx, brow in enumerate(block):
                     for by, b in enumerate(brow):
                         if x+bx >= w or y+by >= h:
