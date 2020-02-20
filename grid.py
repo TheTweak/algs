@@ -16,8 +16,8 @@ class Grid:
         print("Grid data generated in %s" % (time.time() - s))
         for x, r in enumerate(self.data):
             for y, c in enumerate(r):
-                if c == 0:
-                    self.grid[x, y] = [0, 255, 0]
+                if c == 1:
+                    self.grid[x, y] = [255, 255, 255]
 
     def generategrid(self, w=5, h=5):
         rows = [[0]*w for _ in range(h)]
