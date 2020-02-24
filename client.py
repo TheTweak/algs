@@ -28,6 +28,18 @@ class Client:
         msg = b''.join(chunks)
         return np.frombuffer(msg, dtype=np.uint8).reshape((settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT, 3))
 
+    def send_move(self, move):
+        # 0 - up, 1 - right, 2 - down, 3 - left
+        print('Sending move %s' % move)
+        totalsent = 0
+        msg = move.to_bytes(1, byteorder='big')
+        while totalsent < 1:
+            sent = self.socket.send(msg)
+            if sent == 0:
+                print('failed to send a chunk, retrying..')
+                continue
+            totalsent = totalsent + sent
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-server', help='Server address', default='localhost')
@@ -41,6 +53,7 @@ if __name__ == '__main__':
             plt.imshow(client.get_screen())
             plt.pause(1e-6)
             plt.clf()
+            client.send_move(1)
     except Exception as e:
         print('Client failed: %s' % e)
         client.socket.close()

@@ -9,12 +9,14 @@ import time
 import traceback
 
 PORT = 31337
-MSGLEN = len(np.zeros((settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT, 3), dtype=np.uint8).tobytes())
+EMPTY_SCREEN = np.zeros((settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT, 3), dtype=np.uint8)
+MSGLEN = len(EMPTY_SCREEN.tobytes())
+BUFFER_SIZE = 1024
 
 class Player:
 
     def __init__(self, color=[255, 0, 0]):
-        self.pixels = np.zeros((settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT, 3))
+        self.pixels = np.copy(EMPTY_SCREEN)
         self.pixels[0, 0] = color
 
 
@@ -43,7 +45,7 @@ class Server:
             print('Started listening on %s:%s' % (self.address, PORT))
             while True:
                 conn, addr = s.accept()
-                self._on_player_connect(client_socket=conn, client_address=addr)
+                self._on_player_connect(player_socket=conn, player_address=addr)
 
     def get_players(self):
         return self.players
@@ -51,32 +53,53 @@ class Server:
     def get_level(self):
         return self.grid.grid
 
-    def _on_player_connect(self, *, client_socket, client_address):
-        print('Player connected from %s [%s]' % (client_address, client_socket))
-        self.players[client_address] = (client_socket, Player())
+    def get_screen(self):
+        players_pixels = np.copy(EMPTY_SCREEN)
+        for _, p in self.get_players().values():
+            players_pixels += p.pixels
+        return players_pixels + self.get_level()
 
-    def send_screen(self, *, screen, client_socket):
-        print('Sending screen to %s' % client_socket)
+    def _on_player_connect(self, *, player_socket, player_address):
+        print('Player connected from %s [%s]' % (player_address, player_socket))
+        self.players[player_address] = (player_socket, Player())
+
+    def send_screen(self, *, screen, player_socket):
+        print('Sending screen to %s' % player_socket)
         totalsent = 0
         msg = screen.tobytes()
         while totalsent < MSGLEN:
-            sent = client_socket.send(msg[totalsent:])
+            sent = player_socket.send(msg[totalsent:])
             if sent == 0:
                 print('failed to send a chunk, retrying..')
                 continue
             totalsent = totalsent + sent
             print('%s%% sent' % (int((totalsent/MSGLEN))*100))
 
+    def recv_player_move(self, *, player_addr, player, player_socket):
+        print('Receiving player move from: %s:%s' % (player_addr[0], player_addr[1]))
+        chunks = []
+        received = 0
+        while received < 1:
+            move_bytes = player_socket.recv(BUFFER_SIZE)
+            if move_bytes == b'':
+                raise RuntimeError('socket connection broken')
+            received += len(move_bytes)
+        return int.from_bytes(move_bytes, byteorder='big')
+
 
 if __name__ == '__main__':
     s = Server(address='localhost')
     t = 0
-    screen = s.get_level()
     while True:
         try:
             if time.time() - t >= 1:
-                for client_address, (client_sock, player) in s.players.items():
-                    s.send_screen(screen=screen, client_socket=client_sock)
+                screen = s.get_screen()
+                print('screen size in bytes: %s' % len(screen.tobytes()))
+                for player_address, (player_sock, player) in s.players.items():
+                    s.send_screen(screen=screen, player_socket=player_sock)
+                for player_address, (player_sock, player) in s.players.items():
+                    p_move = s.recv_player_move(player_addr=player_address, player=player, player_socket=player_sock)
+                    print('player (%s) move is %s' % (player_address, p_move))
                 t = time.time()
         except Exception as e:
             print('Main loop failed')
