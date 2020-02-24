@@ -4,21 +4,29 @@ from matplotlib import pyplot as plt
 import argparse
 import settings
 
-def get_screen(client):
-    screen = np.zeros((settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT, 3))
-    '''screen += client.get_level()
-    players = client.get_players()
-    for p in players:
-        screen += p.pixels'''
-    return screen
+MSGLEN = len(np.zeros((settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT, 3), dtype=np.uint8).tobytes())
+BUFFER_SIZE = 1024
 
 class Client:
 
     def __init__(self, *, server):
         self.server = server
         print('Connecting to %s..' % server)
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect((server, 31337))
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.connect((server, 31337))
+
+    def get_screen(self):
+        chunks = []
+        received = 0
+        while received < MSGLEN:
+            chunk = self.socket.recv(min(BUFFER_SIZE, MSGLEN - received))
+            if chunk == b'':
+                raise RuntimeError('socket connection broken')
+            chunks.append(chunk)
+            received += len(chunk)
+            print('Received %s%% of screen..' % (int((received / MSGLEN)*100)))
+        msg = b''.join(chunks)
+        return np.frombuffer(msg, dtype=np.uint8).reshape((settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT, 3))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -30,10 +38,10 @@ if __name__ == '__main__':
         plt.gcf().set_size_inches(15, 15)
         while True:
             plt.axis('off')
-            plt.imshow(get_screen(client))
+            plt.imshow(client.get_screen())
             plt.pause(1e-6)
             plt.clf()
     except Exception as e:
         print('Client failed: %s' % e)
-        client.sock.close()
+        client.socket.close()
         raise e
