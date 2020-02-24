@@ -108,7 +108,7 @@ if __name__ == '__main__':
     t = 0
     while True:
         try:
-            if time.time() - t >= 1:
+            if time.time() - t >= 1/20:
                 screen = s.get_screen()
                 print('screen size in bytes: %s' % len(screen.tobytes()))
                 for player_address, (player_sock, player) in s.players.items():
