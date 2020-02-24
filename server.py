@@ -12,12 +12,19 @@ PORT = 31337
 EMPTY_SCREEN = np.zeros((settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT, 3), dtype=np.uint8)
 MSGLEN = len(EMPTY_SCREEN.tobytes())
 BUFFER_SIZE = 1024
+PLAYER_MOVES = [
+        [-1, 0], # 0 - up
+        [0, 1],  # 1 - right
+        [1, 0],  # 2 - down
+        [0, -1], # 3 - left
+]
 
 class Player:
 
     def __init__(self, color=[255, 0, 0]):
         self.pixels = np.copy(EMPTY_SCREEN)
         self.pixels[0, 0] = color
+        self.color = color
 
 
 class Server:
@@ -61,7 +68,9 @@ class Server:
 
     def _on_player_connect(self, *, player_socket, player_address):
         print('Player connected from %s [%s]' % (player_address, player_socket))
-        self.players[player_address] = (player_socket, Player())
+        color = np.random.randint(255, size=3)
+        color[0] = 255
+        self.players[player_address] = (player_socket, Player(color=color))
 
     def send_screen(self, *, screen, player_socket):
         print('Sending screen to %s' % player_socket)
@@ -86,6 +95,13 @@ class Server:
             received += len(move_bytes)
         return int.from_bytes(move_bytes, byteorder='big')
 
+    def update_player_coords(self, *, player, move):
+        player_coords = np.nonzero(player.pixels)
+        move_coords = PLAYER_MOVES[move]
+        new_coords = (player_coords[0][0] + move_coords[0], player_coords[1][0] + move_coords[1])
+        player.pixels = np.copy(EMPTY_SCREEN)
+        player.pixels[new_coords[0], new_coords[1]] = player.color
+
 
 if __name__ == '__main__':
     s = Server(address='localhost')
@@ -99,7 +115,10 @@ if __name__ == '__main__':
                     s.send_screen(screen=screen, player_socket=player_sock)
                 for player_address, (player_sock, player) in s.players.items():
                     p_move = s.recv_player_move(player_addr=player_address, player=player, player_socket=player_sock)
+                    if p_move >= len(PLAYER_MOVES):
+                        continue
                     print('player (%s) move is %s' % (player_address, p_move))
+                    s.update_player_coords(player=player, move=p_move)
                 t = time.time()
         except Exception as e:
             print('Main loop failed')

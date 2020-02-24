@@ -3,9 +3,20 @@ import numpy as np
 from matplotlib import pyplot as plt
 import argparse
 import settings
+import matplotlib as mpl
+
+# remove default keybinding for 's'
+mpl.rcParams['keymap.save'].remove('s')
 
 MSGLEN = len(np.zeros((settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT, 3), dtype=np.uint8).tobytes())
 BUFFER_SIZE = 1024
+MOVE = 4
+KEY_MAP = {
+        'w': 0, # up
+        'd': 1, # right
+        's': 2, # down
+        'a': 3  # left
+}
 
 class Client:
 
@@ -24,7 +35,7 @@ class Client:
                 raise RuntimeError('socket connection broken')
             chunks.append(chunk)
             received += len(chunk)
-            print('Received %s%% of screen..' % (int((received / MSGLEN)*100)))
+            #print('Received %s%% of screen..' % (int((received / MSGLEN)*100)))
         msg = b''.join(chunks)
         return np.frombuffer(msg, dtype=np.uint8).reshape((settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT, 3))
 
@@ -40,6 +51,13 @@ class Client:
                 continue
             totalsent = totalsent + sent
 
+def key_pressed(event):
+    print('key pressed: %s' % event.key)
+    global MOVE
+    if event.key in KEY_MAP:
+        MOVE = KEY_MAP[event.key]
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-server', help='Server address', default='localhost')
@@ -48,12 +66,14 @@ if __name__ == '__main__':
         client = Client(server=args.server)
         plt.ion()
         plt.gcf().set_size_inches(15, 15)
+        plt.gcf().canvas.mpl_connect('key_press_event', key_pressed)
         while True:
             plt.axis('off')
             plt.imshow(client.get_screen())
             plt.pause(1e-6)
             plt.clf()
-            client.send_move(1)
+            client.send_move(MOVE)
+            MOVE = 4
     except Exception as e:
         print('Client failed: %s' % e)
         client.socket.close()
