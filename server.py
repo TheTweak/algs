@@ -73,7 +73,7 @@ class Server:
         self.players[player_address] = (player_socket, Player(color=color))
 
     def send_screen(self, *, screen, player_socket):
-        print('Sending screen to %s' % player_socket)
+        #print('Sending screen to %s' % player_socket)
         totalsent = 0
         msg = screen.tobytes()
         while totalsent < MSGLEN:
@@ -82,10 +82,10 @@ class Server:
                 print('failed to send a chunk, retrying..')
                 continue
             totalsent = totalsent + sent
-            print('%s%% sent' % (int((totalsent/MSGLEN))*100))
+            #print('%s%% sent' % (int((totalsent/MSGLEN))*100))
 
     def recv_player_move(self, *, player_addr, player, player_socket):
-        print('Receiving player move from: %s:%s' % (player_addr[0], player_addr[1]))
+        #print('Receiving player move from: %s:%s' % (player_addr[0], player_addr[1]))
         chunks = []
         received = 0
         while received < 1:
@@ -99,8 +99,11 @@ class Server:
         player_coords = np.nonzero(player.pixels)
         move_coords = PLAYER_MOVES[move]
         new_coords = (player_coords[0][0] + move_coords[0], player_coords[1][0] + move_coords[1])
-        player.pixels = np.copy(EMPTY_SCREEN)
-        player.pixels[new_coords[0], new_coords[1]] = player.color
+        new_pixels = np.copy(EMPTY_SCREEN)
+        new_pixels[new_coords[0], new_coords[1]] = player.color
+        collides_with_wall = self.get_level()[new_coords[0], new_coords[1]] == [255, 255, 255]
+        if not collides_with_wall.all():
+            player.pixels = new_pixels
 
 
 if __name__ == '__main__':
@@ -110,7 +113,6 @@ if __name__ == '__main__':
         try:
             if time.time() - t >= 1/20:
                 screen = s.get_screen()
-                print('screen size in bytes: %s' % len(screen.tobytes()))
                 for player_address, (player_sock, player) in s.players.items():
                     s.send_screen(screen=screen, player_socket=player_sock)
                 for player_address, (player_sock, player) in s.players.items():
