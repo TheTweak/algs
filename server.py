@@ -25,6 +25,7 @@ class Player:
         self.pixels = np.copy(EMPTY_SCREEN)
         self.pixels[0, 0] = color
         self.color = color
+        self.name = 'playerOne'
 
 
 class Server:
@@ -32,6 +33,8 @@ class Server:
     def __init__(self, *, address):
         self.address = address
         self.grid = Grid(w=settings.SCREEN_WIDTH, h=settings.SCREEN_HEIGHT)
+        # mark bottom right
+        self.grid.grid[settings.SCREEN_HEIGHT-1][settings.SCREEN_WIDTH-1] = [0, 255, 0]
         self.players = {}
         self.acceptor_thread = threading.Thread(target=self._start_listening, name='acceptor-thread')
         self.acceptor_thread.start()
@@ -98,7 +101,8 @@ class Server:
     def update_player_coords(self, *, player, move):
         player_coords = np.nonzero(player.pixels)
         move_coords = PLAYER_MOVES[move]
-        new_coords = (player_coords[0][0] + move_coords[0], player_coords[1][0] + move_coords[1])
+        new_coords = (min(settings.SCREEN_HEIGHT - 1, max(0, player_coords[0][0] + move_coords[0])),
+                      min(settings.SCREEN_WIDTH - 1, max(0, player_coords[1][0] + move_coords[1])))
         new_pixels = np.copy(EMPTY_SCREEN)
         new_pixels[new_coords[0], new_coords[1]] = player.color
         collides_with_wall = self.get_level()[new_coords[0], new_coords[1]] == [255, 255, 255]
