@@ -65,7 +65,7 @@ if __name__ == '__main__':
     try:
         client = Client(server=args.server)
         plt.ion()
-        plt.gcf().set_size_inches(15, 15)
+        plt.gcf().set_size_inches(30, 30)
         plt.gcf().canvas.mpl_connect('key_press_event', key_pressed)
         while True:
             plt.axis('off')

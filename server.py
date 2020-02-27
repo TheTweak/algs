@@ -112,13 +112,17 @@ class Server:
         if not collides_with_wall.all():
             player.pixels = new_pixels
 
-    def check_connected_shape(self, *, screen_pixels):
-        screen_reduced = screen_pixels.sum(axis=2)
+    def check_connected_shape(self):
+        level_reduced = self.get_level().sum(axis=2)
         for r in range(0, settings.SCREEN_WIDTH - 1):
             for c in range(0, settings.SCREEN_HEIGHT - 1):
-                if (screen_reduced[r:r+2, c:c+2] > 0).all():
-                    print('found connected shape: %s %s' % (r, c))
-                    self.grid.grid[r:r+2, c:c+2] = [0, 0, 0]
+                for _, p in self.get_players().values():
+                    l = level_reduced + p.pixels.sum(axis=2)
+                    shape = l[r:r+2, c:c+2] 
+                    # [255, 255, 255] is a wall color
+                    if (shape > 0).all() and (shape != sum([255, 255, 255])).any():
+                        print('found connected shape: %s %s [%s]' % (r, c, p.name))
+                        self.grid.grid[r:r+2, c:c+2] = [0, 0, 0]
 
 
 if __name__ == '__main__':
@@ -136,7 +140,7 @@ if __name__ == '__main__':
                         continue
                     print('player (%s) move is %s' % (player_address, p_move))
                     s.update_player_coords(player=player, move=p_move)
-                s.check_connected_shape(screen_pixels=screen)
+                s.check_connected_shape()
                 t = time.time()
         except Exception as e:
             print('Main loop failed')
