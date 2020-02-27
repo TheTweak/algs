@@ -64,10 +64,13 @@ class Server:
         return self.grid.grid
 
     def get_screen(self):
+        return self.get_all_players_pixels() + self.get_level()
+
+    def get_all_players_pixels(self):
         players_pixels = np.copy(EMPTY_SCREEN)
         for _, p in self.get_players().values():
             players_pixels += p.pixels
-        return players_pixels + self.get_level()
+        return players_pixels
 
     def _on_player_connect(self, *, player_socket, player_address):
         print('Player connected from %s [%s]' % (player_address, player_socket))
@@ -109,6 +112,14 @@ class Server:
         if not collides_with_wall.all():
             player.pixels = new_pixels
 
+    def check_connected_shape(self, *, screen_pixels):
+        screen_reduced = screen_pixels.sum(axis=2)
+        for r in range(0, settings.SCREEN_WIDTH - 1):
+            for c in range(0, settings.SCREEN_HEIGHT - 1):
+                if (screen_reduced[r:r+2, c:c+2] > 0).all():
+                    print('found connected shape: %s %s' % (r, c))
+                    self.grid.grid[r:r+2, c:c+2] = [0, 0, 0]
+
 
 if __name__ == '__main__':
     s = Server(address='localhost')
@@ -125,6 +136,7 @@ if __name__ == '__main__':
                         continue
                     print('player (%s) move is %s' % (player_address, p_move))
                     s.update_player_coords(player=player, move=p_move)
+                s.check_connected_shape(screen_pixels=screen)
                 t = time.time()
         except Exception as e:
             print('Main loop failed')
