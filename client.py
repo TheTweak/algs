@@ -62,8 +62,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-server', help='Server address', default='localhost')
     args = parser.parse_args()
+    client = Client(server=args.server)
     try:
-        client = Client(server=args.server)
         plt.ion()
         plt.gcf().set_size_inches(30, 30)
         plt.gcf().canvas.mpl_connect('key_press_event', key_pressed)

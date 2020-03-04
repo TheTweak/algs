@@ -112,25 +112,48 @@ class Server:
         if not collides_with_wall.all():
             player.pixels = new_pixels
 
-    def check_connected_shape(self):
-        level_reduced = self.get_level().sum(axis=2)
-        for r in range(0, settings.SCREEN_WIDTH - 1):
-            for c in range(0, settings.SCREEN_HEIGHT - 1):
-                for _, p in self.get_players().values():
-                    l = level_reduced + p.pixels.sum(axis=2)
-                    shape = l[r:r+2, c:c+2] 
+    def check_connected_shape(self, *, r0=0, r1=settings.SCREEN_WIDTH-1, c0=0, c1=settings.SCREEN_HEIGHT-1,
+                              players_pixels):
+        for r in range(r0, r1):
+            for c in range(c0, c1):
+                for p, name in players_pixels:
+                    shape = p[r:r+2, c:c+2] 
                     # [255, 255, 255] is a wall color
                     if (shape > 0).all() and (shape != sum([255, 255, 255])).any():
-                        print('found connected shape: %s %s [%s]' % (r, c, p.name))
+                        print('found connected shape: %s %s [%s]' % (r, c, name))
                         self.grid.grid[r:r+2, c:c+2] = [0, 0, 0]
 
 
 if __name__ == '__main__':
     s = Server(address='localhost')
     t = 0
+    w_chunk = int(settings.SCREEN_WIDTH/1)
+    h_chunk = int(settings.SCREEN_HEIGHT/1)
+    print('w_chunk=%s, h_chunk=%s' % (w_chunk, h_chunk))
+    w_max = settings.SCREEN_WIDTH-1
+    h_max = settings.SCREEN_HEIGHT-1
     while True:
         try:
             if time.time() - t >= 1/20:
+                frame_time = time.time()
+                threads = []
+                level_reduced = s.get_level().sum(axis=2)
+                players_pixels = []
+                for _, p in s.get_players().values():
+                    l = level_reduced + p.pixels.sum(axis=2)
+                    players_pixels.append((l, p.name))
+                for wc in range(0, w_max, w_chunk):
+                    for hc in range(0, h_max, h_chunk):
+                        args = {'r0': wc,
+                                'r1': min(wc+w_chunk, w_max),
+                                'c0': hc,
+                                'c1': min(hc+h_chunk, h_max),
+                                'players_pixels': players_pixels}
+                        threads.append(threading.Thread(target=s.check_connected_shape, kwargs=args))
+                for t in threads:
+                    t.start()
+                for t in threads:
+                    t.join()
                 screen = s.get_screen()
                 for player_address, (player_sock, player) in s.players.items():
                     s.send_screen(screen=screen, player_socket=player_sock)
@@ -140,8 +163,8 @@ if __name__ == '__main__':
                         continue
                     print('player (%s) move is %s' % (player_address, p_move))
                     s.update_player_coords(player=player, move=p_move)
-                s.check_connected_shape()
                 t = time.time()
+                print('frame duration: %s, threads: %s' % (time.time() - frame_time, len(threads)))
         except Exception as e:
             print('Main loop failed')
             traceback.print_exc()
